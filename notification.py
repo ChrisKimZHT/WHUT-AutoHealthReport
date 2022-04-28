@@ -22,7 +22,7 @@ def msg(text):
     if cqhttp:
         send_cqhttp(text)
     if mail:
-        send_cqhttp(text)
+        send_mail(text)
 
 
 def send_cqhttp(text):

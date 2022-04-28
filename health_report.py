@@ -1,17 +1,31 @@
 import requests
 import json
 import base64
+import random
 
 # 在此填写账号密码，账号通常为学号，密码通常为身份证后6位。注意：需要解绑微信
 account = ""
 password = ""
+# 在此填写定位地址（这个是余家头的地址）
+province = "湖北省"
+city = "武汉市"
+county = "武昌区"
+street = "友谊大道"
+# 在此填写填报体温（不要乱改）
+temperature = "36.5°C~36.9°C"
+
+# User-Agent列表 一个是iOS微信，一个是PC微信，
+ua_list = [
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 15_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.20(0x1800142f) NetType/WIFI Language/zh_CN",
+    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36 MicroMessenger/7.0.9.501 NetType/WIFI MiniProgramEnv/Windows WindowsWechat"
+]
 
 # http请求头
 headers = {
     "Host": "zhxg.whut.edu.cn",
     "Connection": "keep-alive",
     # "Content-Length": "",
-    "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36 MicroMessenger/7.0.9.501 NetType/WIFI MiniProgramEnv/Windows WindowsWechat",
+    # "User-Agent": "",
     "X-Tag": "flyio",
     "content-type": "application/json",
     "encode": "true",
@@ -29,6 +43,7 @@ def check_bind():
     global headers
     global log
     url = "https://zhxg.whut.edu.cn/yqtjwx/api/login/checkBind"
+    headers["User-Agent"] = random.choice(ua_list)
     data = dict_to_base64_bin({"sn": None, "idCard": None})
     respounce = requests.post(url=url, headers=headers, data=data).json()
     log += f"获取SessionID-返回消息：{respounce}\n"
@@ -51,7 +66,7 @@ def bind_user_info():
 
 # 健康填报
 # https://zhxg.whut.edu.cn/yqtjwx/./monitorRegister
-def monitor_register(province, city, county, street):
+def monitor_register():
     global log
     global result
     address = province + city + county + street
@@ -67,7 +82,7 @@ def monitor_register(province, city, county, street):
         "isInSchool": "1",
         "isLeaveChengdu": "0",
         "isSymptom": "0",
-        "temperature": "36.5°C~36.9°C",
+        "temperature": temperature,
         "province": province,
         "city": city,
         "county": county
@@ -107,7 +122,7 @@ def report():
     check_bind()
     try:
         bind_user_info()
-        monitor_register("湖北省", "武汉市", "武昌区", "友谊大道")
+        monitor_register()
     finally:
         cancel_bind()
     if result[0]:
