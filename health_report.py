@@ -34,8 +34,7 @@ headers = {
     "Accept-Encoding": "gzip, deflate, br"
 }
 
-log = ""  # 返回信息
-result = []  # 结果
+log = ""  # 运行日志
 
 
 # 获取SessionID
@@ -48,9 +47,13 @@ def check_bind():
     data = dict_to_base64_bin({"sn": None, "idCard": None})
     respounce = requests.post(url=url, headers=headers, data=data).json()
     log += f"[获取SessionID] 返回消息:\n{respounce}\n"
-    resp_data = base64_str_to_dict(respounce["data"])
-    log += f"[获取SessionID] data解码:\n{resp_data}\n"
-    headers["Cookie"] = f"JSESSIONID={resp_data['sessionId']}"  # 写入Cookie
+    if respounce["status"]:
+        resp_data = base64_str_to_dict(respounce["data"])
+        log += f"[获取SessionID] data解码:\n{resp_data}\n"
+        headers["Cookie"] = f"JSESSIONID={resp_data['sessionId']}"  # 写入Cookie
+        return True
+    else:
+        return False
 
 
 # 绑定身份
@@ -61,15 +64,18 @@ def bind_user_info():
     data = dict_to_base64_bin({"sn": account, "idCard": password})
     respounce = requests.post(url=url, headers=headers, data=data).json()
     log += f"[绑定身份] 返回消息:\n{respounce}\n"
-    resp_data = base64_str_to_dict(respounce["data"])
-    log += f"[绑定身份] data解码:\n{resp_data}\n"
+    if respounce["status"]:
+        resp_data = base64_str_to_dict(respounce["data"])
+        log += f"[绑定身份] data解码:\n{resp_data}\n"
+        return True
+    else:
+        return False
 
 
 # 健康填报
 # https://zhxg.whut.edu.cn/yqtjwx/./monitorRegister
 def monitor_register():
     global log
-    global result
     address = province + city + county + street
     url = "https://zhxg.whut.edu.cn/yqtjwx/./monitorRegister"
     dict_data = {
@@ -91,7 +97,12 @@ def monitor_register():
     data = dict_to_base64_bin(dict_data)
     respounce = requests.post(url=url, headers=headers, data=data).json()
     log += f"[健康填报] 返回消息:\n{respounce}\n"
-    result = [respounce["status"], respounce["message"]]
+    if respounce["status"]:
+        resp_data = base64_str_to_dict(respounce["data"])
+        log += f"[健康填报] data解码:\n{resp_data}\n"
+        return True
+    else:
+        return False
 
 
 # 解绑：若不解绑，下次将无法绑定
@@ -101,8 +112,12 @@ def cancel_bind():
     url = "https://zhxg.whut.edu.cn/yqtjwx/api/login/cancelBind"
     respounce = requests.post(url=url, headers=headers).json()
     log += f"[解绑账号] 返回消息:\n{respounce}\n"
-    resp_data = base64_str_to_dict(respounce["data"])
-    log += f"[解绑账号] data解码:\n{resp_data}\n"
+    if respounce["status"]:
+        resp_data = base64_str_to_dict(respounce["data"])
+        log += f"[解绑账号] data解码:\n{resp_data}\n"
+        return True
+    else:
+        return False
 
 
 def dict_to_base64_bin(data: dict) -> bin:
@@ -120,13 +135,14 @@ def base64_str_to_dict(data: str) -> dict:
 
 
 def report():
-    check_bind()
+    status = True
     try:
-        bind_user_info()
-        monitor_register()
+        if not (check_bind() and bind_user_info() and monitor_register()):
+            status = False
     finally:
-        cancel_bind()
-    if result[0]:
-        return "【健康填报】填报成功，返回消息：\n" + result[1]
+        status &= cancel_bind()
+        print(log)
+    if status:
+        return "【健康填报】填报成功\n"
     else:
         return "【健康填报】填报失败，详细日志：\n" + log
