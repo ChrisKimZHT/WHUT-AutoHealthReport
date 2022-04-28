@@ -37,7 +37,7 @@ def send_mail(text):
     if ssl:
         server = smtplib.SMTP_SSL(host, port)
     else:
-        server = smtplib.SMTP_SSL(host, port)
+        server = smtplib.SMTP(host, port)
     server.login(account, password)
     mail_msg = MIMEText(text, "plain", "utf-8")
     mail_msg["From"] = formataddr(["WHUT-AutoHealthReport", sender])
