@@ -47,9 +47,9 @@ def check_bind():
     headers["User-Agent"] = random.choice(ua_list)
     data = dict_to_base64_bin({"sn": None, "idCard": None})
     respounce = requests.post(url=url, headers=headers, data=data).json()
-    log += f"获取SessionID-返回消息：{respounce}\n"
+    log += f"[获取SessionID] 返回消息:\n{respounce}\n"
     resp_data = base64_str_to_dict(respounce["data"])
-    log += f"获取SessionID-data解码：{resp_data}\n"
+    log += f"[获取SessionID] data解码:\n{resp_data}\n"
     headers["Cookie"] = f"JSESSIONID={resp_data['sessionId']}"  # 写入Cookie
 
 
@@ -60,9 +60,9 @@ def bind_user_info():
     url = "https://zhxg.whut.edu.cn/yqtjwx/api/login/bindUserInfo"
     data = dict_to_base64_bin({"sn": account, "idCard": password})
     respounce = requests.post(url=url, headers=headers, data=data).json()
-    log += f"绑定身份-返回消息：{respounce}\n"
+    log += f"[绑定身份] 返回消息:\n{respounce}\n"
     resp_data = base64_str_to_dict(respounce["data"])
-    log += f"绑定身份-data解码：{resp_data}\n"
+    log += f"[绑定身份] data解码:\n{resp_data}\n"
 
 
 # 健康填报
@@ -90,7 +90,7 @@ def monitor_register():
     }
     data = dict_to_base64_bin(dict_data)
     respounce = requests.post(url=url, headers=headers, data=data).json()
-    log += f"健康填报-返回消息：{respounce}\n"
+    log += f"[健康填报] 返回消息:\n{respounce}\n"
     result = [respounce["status"], respounce["message"]]
 
 
@@ -100,9 +100,9 @@ def cancel_bind():
     global log
     url = "https://zhxg.whut.edu.cn/yqtjwx/api/login/cancelBind"
     respounce = requests.post(url=url, headers=headers).json()
-    log += f"解绑-返回消息：{respounce}\n"
+    log += f"[解绑账号] 返回消息:\n{respounce}\n"
     resp_data = base64_str_to_dict(respounce["data"])
-    log += f"解绑-data解码：{resp_data}\n"
+    log += f"[解绑账号] data解码:\n{resp_data}\n"
 
 
 def dict_to_base64_bin(data: dict) -> bin:
@@ -127,6 +127,6 @@ def report():
     finally:
         cancel_bind()
     if result[0]:
-        return "填报成功，返回消息：\n" + result[1]
+        return "【健康填报】填报成功，返回消息：\n" + result[1]
     else:
-        return "填报失败，详细日志：\n" + log
+        return "【健康填报】填报失败，详细日志：\n" + log
