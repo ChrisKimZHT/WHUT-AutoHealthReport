@@ -146,3 +146,30 @@ def report():
         return "【健康填报】填报成功\n"
     else:
         return "【健康填报】填报失败，详细日志：\n" + log
+
+
+def report_multi():
+    user_list = [
+        {"account": "", "password": ""},
+        {"account": "", "password": ""},
+        {"account": "", "password": ""},
+        {"account": "", "password": ""},
+    ]
+    global account, password, headers, log
+    return_info = ""
+    for user in user_list:
+        account = user["account"]
+        password = user["password"]
+        headers["Cookie"] = ""
+        log = ""
+        status = True
+        try:
+            if not (check_bind() and bind_user_info() and monitor_register()):
+                status = False
+        finally:
+            status &= cancel_bind()
+            print(log)
+        if status:
+            return_info += f"【健康填报】用户{account}填报成功\n"
+        else:
+            return_info += f"【健康填报】用户{account}填报失败，详细日志：\n" + log

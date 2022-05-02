@@ -1,4 +1,5 @@
 .idea
+*.txt
 
 ### Python template
 # Byte-compiled / optimized / DLL files
