@@ -173,3 +173,4 @@ def report_multi():
             return_info += f"【健康填报】用户{account}填报成功\n"
         else:
             return_info += f"【健康填报】用户{account}填报失败，详细日志：\n" + log
+    return return_info
