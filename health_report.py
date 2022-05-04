@@ -41,6 +41,8 @@ log = ""  # 运行日志
 def check_bind():
     global headers
     global log
+    headers["Cookie"] = ""
+    log = ""
     url = "https://zhxg.whut.edu.cn/yqtjwx/api/login/checkBind"
     headers["User-Agent"] = random.choice(ua_list)
     data = dict_to_base64_bin({"sn": None, "idCard": None})
