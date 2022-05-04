@@ -6,8 +6,8 @@ from email.utils import formataddr
 # ===== cqhttp配置 =====
 cqhttp = False  # 是否启用cqhttp
 api = "http://127.0.0.1:5700/send_msg"  # cqhttp http API 地址
-# uid = ""  # 收信QQ号
-gid = ""  # 收信群号
+uid = ""  # 收信QQ号，不填则不发送
+gid = ""  # 收信群号，不填则不发送
 # ===== 邮件设置 =====
 mail = False  # 是否启用邮件
 ssl = True  # 是否启用SSL
@@ -27,15 +27,18 @@ def msg(text):
 
 
 def send_cqhttp(text):
-    # data = {
-    #     "user_id": uid,
-    #     "message": text
-    # }
-    data = {
+    data_user = {
+        "user_id": uid,
+        "message": text
+    }
+    data_group = {
         "group_id": gid,
         "message": text
     }
-    requests.get(api, params=data)
+    if data_user["user_id"] != "":
+        requests.get(api, params=data_user)
+    if data_group["group_id"] != "":
+        requests.get(api, params=data_group)
 
 
 def send_mail(text):

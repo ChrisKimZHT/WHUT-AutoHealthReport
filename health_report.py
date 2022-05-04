@@ -3,17 +3,16 @@ import json
 import base64
 import random
 
-# 在此填写账号密码，账号通常为学号，密码通常为身份证后6位。注意：需要解绑微信
-account = ""
-password = ""
+# =====可修改配置=====
 # 在此填写定位地址（这个是余家头的地址）
 province = "湖北省"
 city = "武汉市"
 county = "武昌区"
 street = "友谊大道"
-# 在此填写填报体温（不要乱改）
+# 在此填写填报体温（不要乱改，记得填和打卡软件一致的温度）
 temperature = "36.5°C~36.9°C"
 
+# =====以下不建议修改=====
 # User-Agent列表 分别是Android微信、iOS微信、PC微信
 ua_list = [
     "Mozilla/5.0 (Linux; Android 11; POCO F2 Pro Build/RKQ1.200826.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/74.0.3729.136 Mobile Safari/537.36 MMWEBID/1230 MicroMessenger/8.0.17.2040(0x28001133) Process/toolsmp WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64",
@@ -58,7 +57,7 @@ def check_bind():
 
 # 绑定身份
 # https://zhxg.whut.edu.cn/yqtjwx/api/login/bindUserInfo
-def bind_user_info():
+def bind_user_info(account, password):
     global log
     url = "https://zhxg.whut.edu.cn/yqtjwx/api/login/bindUserInfo"
     data = dict_to_base64_bin({"sn": account, "idCard": password})
@@ -134,43 +133,17 @@ def base64_str_to_dict(data: str) -> dict:
     return dictionary
 
 
-def report():
+def report(account, password):
     status = True
     try:
-        if not (check_bind() and bind_user_info() and monitor_register()):
+        if not (check_bind() and bind_user_info(account, password) and monitor_register()):
             status = False
     finally:
         status &= cancel_bind()
         print(log)
     if status:
-        return "【健康填报】填报成功\n"
+        return f"【健康填报】" \
+               f"{account} 填报成功！\n"
     else:
-        return "【健康填报】填报失败，详细日志：\n" + log
-
-
-def report_multi():
-    user_list = [
-        {"account": "", "password": ""},
-        {"account": "", "password": ""},
-        {"account": "", "password": ""},
-        {"account": "", "password": ""},
-    ]
-    global account, password, headers, log
-    return_info = ""
-    for user in user_list:
-        account = user["account"]
-        password = user["password"]
-        headers["Cookie"] = ""
-        log = ""
-        status = True
-        try:
-            if not (check_bind() and bind_user_info() and monitor_register()):
-                status = False
-        finally:
-            status &= cancel_bind()
-            print(log)
-        if status:
-            return_info += f"【健康填报】用户{account}填报成功\n"
-        else:
-            return_info += f"【健康填报】用户{account}填报失败，详细日志：\n" + log
-    return return_info
+        return f"【健康填报】" \
+               f"{account} 填报失败，详细日志：\n" + log
