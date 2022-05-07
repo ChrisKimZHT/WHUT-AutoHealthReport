@@ -12,4 +12,7 @@ user_list = [
 if __name__ == "__main__":
     for user in user_list:
         text = report(user["account"], user["password"])
-        msg(text)
+        try:
+            msg(text)
+        except:
+            print("发信异常，请检查发信配置")
