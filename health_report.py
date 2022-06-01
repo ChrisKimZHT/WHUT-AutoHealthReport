@@ -4,6 +4,8 @@ import base64
 import random
 
 # =====可修改配置=====
+# 是否为研究生
+is_graduate = True
 # 在此填写定位地址（这个是余家头的地址）
 province = "湖北省"
 city = "武汉市"
@@ -21,17 +23,30 @@ ua_list = [
 ]
 
 # http请求头
-headers = {
-    "Host": "zhxg.whut.edu.cn",
-    "Connection": "keep-alive",
-    # "Content-Length": "",
-    # "User-Agent": "",
-    "X-Tag": "flyio",
-    "content-type": "application/json",
-    "encode": "true",
-    "Referer": "https://servicewechat.com/wxa0738e54aae84423/21/page-frame.html",
-    "Accept-Encoding": "gzip, deflate, br"
-}
+if is_graduate:
+    headers = {
+        "Host": "yjsxx.whut.edu.cn",
+        "Connection": "keep-alive",
+        # "Content-Length": "",
+        # "User-Agent": "",
+        "X-Tag": "flyio",
+        "content-type": "application/json",
+        "encode": "true",
+        "Referer": "https://servicewechat.com/wxa0738e54aae84423/21/page-frame.html",
+        "Accept-Encoding": "gzip, deflate, br"
+    }
+else:
+    headers = {
+        "Host": "zhxg.whut.edu.cn",
+        "Connection": "keep-alive",
+        # "Content-Length": "",
+        # "User-Agent": "",
+        "X-Tag": "flyio",
+        "content-type": "application/json",
+        "encode": "true",
+        "Referer": "https://servicewechat.com/wxa0738e54aae84423/21/page-frame.html",
+        "Accept-Encoding": "gzip, deflate, br"
+    }
 
 log = ""  # 运行日志
 
@@ -43,7 +58,10 @@ def check_bind():
     global log
     headers["Cookie"] = ""
     log = ""
-    url = "https://zhxg.whut.edu.cn/yqtjwx/api/login/checkBind"
+    if is_graduate:
+        url = "https://yjsxx.whut.edu.cn/wx/api/login/checkBind"
+    else:
+        url = "https://zhxg.whut.edu.cn/yqtjwx/api/login/checkBind"
     headers["User-Agent"] = random.choice(ua_list)
     data = dict_to_base64_bin({"sn": None, "idCard": None})
     respounce = requests.post(url=url, headers=headers, data=data).json()
@@ -61,7 +79,10 @@ def check_bind():
 # https://zhxg.whut.edu.cn/yqtjwx/api/login/bindUserInfo
 def bind_user_info(account, password):
     global log
-    url = "https://zhxg.whut.edu.cn/yqtjwx/api/login/bindUserInfo"
+    if is_graduate:
+        url = "https://yjsxx.whut.edu.cn/wx/api/login/bindUserInfo"
+    else:
+        url = "https://zhxg.whut.edu.cn/yqtjwx/api/login/bindUserInfo"
     data = dict_to_base64_bin({"sn": account, "idCard": password})
     respounce = requests.post(url=url, headers=headers, data=data).json()
     log += f"[绑定身份] 返回消息:\n{respounce}\n"
@@ -78,7 +99,10 @@ def bind_user_info(account, password):
 def monitor_register():
     global log
     address = province + city + county + street
-    url = "https://zhxg.whut.edu.cn/yqtjwx/./monitorRegister"
+    if is_graduate:
+        url = "https://yjsxx.whut.edu.cn/wx/./monitorRegister"
+    else:
+        url = "https://zhxg.whut.edu.cn/yqtjwx/./monitorRegister"
     dict_data = {
         "diagnosisName": "",
         "relationWithOwn": "",
@@ -110,7 +134,10 @@ def monitor_register():
 # https://zhxg.whut.edu.cn/yqtjwx/api/login/cancelBind
 def cancel_bind():
     global log
-    url = "https://zhxg.whut.edu.cn/yqtjwx/api/login/cancelBind"
+    if is_graduate:
+        url = "https://yjsxx.whut.edu.cn/wx/api/login/cancelBind"
+    else:
+        url = "https://zhxg.whut.edu.cn/yqtjwx/api/login/cancelBind"
     respounce = requests.post(url=url, headers=headers).json()
     log += f"[解绑账号] 返回消息:\n{respounce}\n"
     if respounce["status"]:
