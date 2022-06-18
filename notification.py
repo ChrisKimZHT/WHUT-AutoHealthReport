@@ -26,9 +26,17 @@ gid = ""  # 收信群号，不填则不发送
 
 def msg(text):
     if cqhttp:
-        send_cqhttp(text)
+        try:
+            send_cqhttp(text)
+            print("成功发送cqhttp消息")
+        except:
+            print("发送cqhttp消息失败")
     if mail:
-        send_mail(text)
+        try:
+            send_mail(text)
+            print("成功发送邮件")
+        except:
+            print("发送邮件失败")
 
 
 def send_cqhttp(text):
