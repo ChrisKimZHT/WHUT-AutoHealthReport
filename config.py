@@ -111,6 +111,7 @@ def init_config():
           "！若你不知道cqhttp是什么，请不要启用！")
     enable_cqhttp = input("是否启用QQ推送(Y/N): ")
     if enable_cqhttp == "Y" or enable_cqhttp == "y":
+        conf_notification["cqhttp"]["enable"] = True
         conf_notification["cqhttp"]["api"] = input(
             "cqhttp http API 地址(留空默认“http://127.0.0.1:5700/send_msg”): ") or "http://127.0.0.1:5700/send_msg"
         conf_notification["cqhttp"]["uid"] = input("收信QQ号，不填则不发送: ")
