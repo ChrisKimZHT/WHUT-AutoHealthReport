@@ -3,18 +3,6 @@ import json
 import base64
 import random
 
-# =====可修改配置=====
-# 是否为研究生
-is_graduate = True
-# 在此填写定位地址（这个是余家头的地址）
-province = "湖北省"
-city = "武汉市"
-county = "武昌区"
-street = "友谊大道"
-# 在此填写填报体温（不要乱改，记得填和打卡软件一致的温度）
-temperature = "36.5°C~36.9°C"
-
-# =====以下不建议修改=====
 # User-Agent列表 分别是Android微信、iOS微信、PC微信
 ua_list = [
     "Mozilla/5.0 (Linux; Android 11; POCO F2 Pro Build/RKQ1.200826.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/74.0.3729.136 Mobile Safari/537.36 MMWEBID/1230 MicroMessenger/8.0.17.2040(0x28001133) Process/toolsmp WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64",
@@ -23,45 +11,35 @@ ua_list = [
 ]
 
 # http请求头
-if is_graduate:
-    headers = {
-        "Host": "yjsxx.whut.edu.cn",
-        "Connection": "keep-alive",
-        # "Content-Length": "",
-        # "User-Agent": "",
-        "X-Tag": "flyio",
-        "content-type": "application/json",
-        "encode": "true",
-        "Referer": "https://servicewechat.com/wxa0738e54aae84423/21/page-frame.html",
-        "Accept-Encoding": "gzip, deflate, br"
-    }
-else:
-    headers = {
-        "Host": "zhxg.whut.edu.cn",
-        "Connection": "keep-alive",
-        # "Content-Length": "",
-        # "User-Agent": "",
-        "X-Tag": "flyio",
-        "content-type": "application/json",
-        "encode": "true",
-        "Referer": "https://servicewechat.com/wxa0738e54aae84423/21/page-frame.html",
-        "Accept-Encoding": "gzip, deflate, br"
-    }
+headers = {
+    # "Host": "",
+    "Connection": "keep-alive",
+    # "Content-Length": "",
+    # "User-Agent": "",
+    "X-Tag": "flyio",
+    "content-type": "application/json",
+    "encode": "true",
+    "Referer": "https://servicewechat.com/wxa0738e54aae84423/21/page-frame.html",
+    "Accept-Encoding": "gzip, deflate, br"
+}
 
 log = ""  # 运行日志
 
 
 # 获取SessionID
 # https://zhxg.whut.edu.cn/yqtjwx/api/login/checkBind
-def check_bind():
-    global headers
+# https://yjsxx.whut.edu.cn/wx/api/login/checkBind
+def check_bind(is_graduate: bool) -> bool:
     global log
+    log = ""  # 清空log
+    # 设置header
     headers["Cookie"] = ""
-    log = ""
     if is_graduate:
         url = "https://yjsxx.whut.edu.cn/wx/api/login/checkBind"
+        headers["Host"] = "yjsxx.whut.edu.cn"
     else:
         url = "https://zhxg.whut.edu.cn/yqtjwx/api/login/checkBind"
+        headers["Host"] = "zhxg.whut.edu.cn"
     headers["User-Agent"] = random.choice(ua_list)
     data = dict_to_base64_bin({"sn": None, "idCard": None})
     respounce = requests.post(url=url, headers=headers, data=data).json()
@@ -77,7 +55,8 @@ def check_bind():
 
 # 绑定身份
 # https://zhxg.whut.edu.cn/yqtjwx/api/login/bindUserInfo
-def bind_user_info(account, password):
+# https://yjsxx.whut.edu.cn/wx/api/login/bindUserInfo
+def bind_user_info(account: str, password: str, is_graduate: bool) -> bool:
     global log
     if is_graduate:
         url = "https://yjsxx.whut.edu.cn/wx/api/login/bindUserInfo"
@@ -96,7 +75,8 @@ def bind_user_info(account, password):
 
 # 健康填报
 # https://zhxg.whut.edu.cn/yqtjwx/./monitorRegister
-def monitor_register():
+# https://yjsxx.whut.edu.cn/wx/./monitorRegister
+def monitor_register(is_graduate: bool, province: str, city: str, county: str, street: str, temperature: str) -> bool:
     global log
     address = province + city + county + street
     if is_graduate:
@@ -132,7 +112,7 @@ def monitor_register():
 
 # 解绑：若不解绑，下次将无法绑定
 # https://zhxg.whut.edu.cn/yqtjwx/api/login/cancelBind
-def cancel_bind():
+def cancel_bind(is_graduate: bool) -> bool:
     global log
     if is_graduate:
         url = "https://yjsxx.whut.edu.cn/wx/api/login/cancelBind"
@@ -162,13 +142,16 @@ def base64_str_to_dict(data: str) -> dict:
     return dictionary
 
 
-def report(account, password):
+def report(account: str, password: str, is_graduate: bool,
+           province: str, city: str, county: str, street: str, temperature: str):
     status = True
     try:
-        if not (check_bind() and bind_user_info(account, password) and monitor_register()):
+        if not (check_bind(is_graduate) and
+                bind_user_info(account, password, is_graduate) and
+                monitor_register(is_graduate, province, city, county, street, temperature)):
             status = False
     finally:
-        status &= cancel_bind()
+        status &= cancel_bind(is_graduate)
         print(log)
     if status:
         return f"【健康填报】" \
