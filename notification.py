@@ -1,6 +1,7 @@
 import requests
 import smtplib
 from config import conf_notification
+from logger import log
 from email.mime.text import MIMEText
 from email.utils import formataddr
 
@@ -26,22 +27,23 @@ gid = conf_notification["cqhttp"]["gid"]  # 收信群号，不填则不发送
 
 
 def msg(text):
+    log.info("=======消息推送=======")
     if cqhttp:
         try:
             send_cqhttp(text)
-            print("成功发送cqhttp消息")
+            log.info("成功发送cqhttp消息")
         except:
-            print("发送cqhttp消息失败")
+            log.error("发送cqhttp消息失败")
     else:
-        print("未启用cqhttp发信")
+        log.info("未启用cqhttp推送")
     if mail:
         try:
             send_mail(text)
-            print("成功发送邮件")
+            log.info("成功发送邮件")
         except:
-            print("发送邮件失败")
+            log.error("发送邮件失败")
     else:
-        print("未启用邮件发信")
+        log.info("未启用邮件发信")
 
 
 def send_cqhttp(text):

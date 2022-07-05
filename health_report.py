@@ -2,6 +2,7 @@ import requests
 import json
 import base64
 import random
+from logger import log
 
 # User-Agent列表 分别是Android微信、iOS微信、PC微信
 ua_list = [
@@ -23,17 +24,16 @@ headers = {
     "Accept-Encoding": "gzip, deflate, br"
 }
 
-log = ""  # 运行日志
+error_log = ""
 
 
 # 获取SessionID
 # https://zhxg.whut.edu.cn/yqtjwx/api/login/checkBind
 # https://yjsxx.whut.edu.cn/wx/api/login/checkBind
 def check_bind(is_graduate: bool) -> bool:
-    global log
-    log = ""  # 清空log
+    global error_log
+    log.info("[1] 正在创建会话")
     # 设置header
-    headers["Cookie"] = ""
     if is_graduate:
         url = "https://yjsxx.whut.edu.cn/wx/api/login/checkBind"
         headers["Host"] = "yjsxx.whut.edu.cn"
@@ -41,15 +41,18 @@ def check_bind(is_graduate: bool) -> bool:
         url = "https://zhxg.whut.edu.cn/yqtjwx/api/login/checkBind"
         headers["Host"] = "zhxg.whut.edu.cn"
     headers["User-Agent"] = random.choice(ua_list)
+    log.debug(f"设置header完成: {headers}")
     data = dict_to_base64_bin({"sn": None, "idCard": None})
     respounce = requests.post(url=url, headers=headers, data=data).json()
-    log += f"[获取SessionID] 返回消息:\n{respounce}\n"
+    log.debug(f"请求发送完成，收到响应: {respounce}")
     if respounce["status"]:
         resp_data = base64_str_to_dict(respounce["data"])
-        log += f"[获取SessionID] data解码:\n{resp_data}\n"
+        log.debug(f"响应data解码: {resp_data}")
         headers["Cookie"] = f"JSESSIONID={resp_data['sessionId']}"  # 写入Cookie
         return True
     else:
+        error_log += str(respounce)
+        log.error("[X] 创建会话出现错误，详情见log.txt")
         return False
 
 
@@ -57,19 +60,22 @@ def check_bind(is_graduate: bool) -> bool:
 # https://zhxg.whut.edu.cn/yqtjwx/api/login/bindUserInfo
 # https://yjsxx.whut.edu.cn/wx/api/login/bindUserInfo
 def bind_user_info(account: str, password: str, is_graduate: bool) -> bool:
-    global log
+    global error_log
+    log.info("[2] 正在绑定身份")
     if is_graduate:
         url = "https://yjsxx.whut.edu.cn/wx/api/login/bindUserInfo"
     else:
         url = "https://zhxg.whut.edu.cn/yqtjwx/api/login/bindUserInfo"
     data = dict_to_base64_bin({"sn": account, "idCard": password})
     respounce = requests.post(url=url, headers=headers, data=data).json()
-    log += f"[绑定身份] 返回消息:\n{respounce}\n"
+    log.debug(f"请求发送完成，收到响应: {respounce}")
     if respounce["status"]:
         resp_data = base64_str_to_dict(respounce["data"])
-        log += f"[绑定身份] data解码:\n{resp_data}\n"
+        log.debug(f"响应data解码: {resp_data}")
         return True
     else:
+        error_log += str(respounce)
+        log.error("[X] 绑定身份出现错误，详情见log.txt")
         return False
 
 
@@ -77,7 +83,8 @@ def bind_user_info(account: str, password: str, is_graduate: bool) -> bool:
 # https://zhxg.whut.edu.cn/yqtjwx/./monitorRegister
 # https://yjsxx.whut.edu.cn/wx/./monitorRegister
 def monitor_register(is_graduate: bool, province: str, city: str, county: str, street: str, temperature: str) -> bool:
-    global log
+    global error_log
+    log.info("[3] 正在填报操作")
     address = province + city + county + street
     if is_graduate:
         url = "https://yjsxx.whut.edu.cn/wx/./monitorRegister"
@@ -99,32 +106,38 @@ def monitor_register(is_graduate: bool, province: str, city: str, county: str, s
         "city": city,
         "county": county
     }
+    log.debug(f"填报数据生成完成: {dict_data}")
     data = dict_to_base64_bin(dict_data)
     respounce = requests.post(url=url, headers=headers, data=data).json()
-    log += f"[健康填报] 返回消息:\n{respounce}\n"
+    log.debug(f"请求发送完成，收到响应: {respounce}")
     if respounce["status"]:
         resp_data = base64_str_to_dict(respounce["data"])
-        log += f"[健康填报] data解码:\n{resp_data}\n"
+        log.debug(f"响应data解码: {resp_data}")
         return True
     else:
+        error_log += str(respounce)
+        log.error("[X] 填报操作出现错误，详情见log.txt")
         return False
 
 
 # 解绑：若不解绑，下次将无法绑定
 # https://zhxg.whut.edu.cn/yqtjwx/api/login/cancelBind
 def cancel_bind(is_graduate: bool) -> bool:
-    global log
+    global error_log
+    log.info("[4] 正在解绑身份")
     if is_graduate:
         url = "https://yjsxx.whut.edu.cn/wx/api/login/cancelBind"
     else:
         url = "https://zhxg.whut.edu.cn/yqtjwx/api/login/cancelBind"
     respounce = requests.post(url=url, headers=headers).json()
-    log += f"[解绑账号] 返回消息:\n{respounce}\n"
+    log.debug(f"请求发送完成，收到响应: {respounce}")
     if respounce["status"]:
         resp_data = base64_str_to_dict(respounce["data"])
-        log += f"[解绑账号] data解码:\n{resp_data}\n"
+        log.debug(f"响应data解码: {resp_data}")
         return True
     else:
+        error_log += str(respounce)
+        log.error("[X] 解绑身份出现错误，详情见log.txt")
         return False
 
 
@@ -144,7 +157,12 @@ def base64_str_to_dict(data: str) -> dict:
 
 def report(account: str, password: str, is_graduate: bool,
            province: str, city: str, county: str, street: str, temperature: str):
-    status = True
+    global error_log
+    log.info("=======健康填报=======")
+    log.info(f"学生: {account}")
+    status = True  # 填报状态
+    headers["Cookie"] = ""  # 重置headers
+    error_log = ""  # 重置错误日志
     try:
         if not (check_bind(is_graduate) and
                 bind_user_info(account, password, is_graduate) and
@@ -152,10 +170,9 @@ def report(account: str, password: str, is_graduate: bool,
             status = False
     finally:
         status &= cancel_bind(is_graduate)
-        print(log)
     if status:
-        return f"【健康填报】" \
-               f"{account} 填报成功！\n"
+        log.info(f"学生{account}填报成功")
+        return f"学生 {account} 填报成功！"
     else:
-        return f"【健康填报】" \
-               f"{account} 填报失败，详细日志：\n" + log
+        log.error(f"学生{account}填报失败")
+        return f"学生 {account} 填报失败！\n" + error_log
