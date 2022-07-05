@@ -54,11 +54,11 @@ def student_dict(global_province: str = "湖北省", global_city: str = "武汉�
         is_graduate = True
     else:
         is_graduate = False
-    province = input(f"填报省份(留空默认”{global_province}“): ") or global_province
-    city = input(f"填报城市(留空默认”{global_city}“): ") or global_city
-    county = input(f"填报区县(留空默认”{global_county}“): ") or global_county
-    street = input(f"填报街道(留空默认”{global_street}“): ") or global_street
-    temperature = input("填报温度，若要修改请与微信小程序一致(留空默认“36.5°C~36.9°C”): ") or "36.5°C~36.9°C"
+    province = input(f"填报省份(留空默认\"{global_province}\"): ") or global_province
+    city = input(f"填报城市(留空默认\"{global_city}\"): ") or global_city
+    county = input(f"填报区县(留空默认\"{global_county}\"): ") or global_county
+    street = input(f"填报街道(留空默认\"{global_street}\"): ") or global_street
+    temperature = input("填报温度，若要修改请与微信小程序一致(留空默认\"36.5°C~36.9°C\"): ") or "36.5°C~36.9°C"
     return {
         "account": account,
         "password": password,
@@ -75,13 +75,13 @@ def init_config():
     print("======身份设置======")
     batch = input("是否批量填报，即一次填报多人(Y/N): ")
     if batch == "Y" or batch == "y":
-        count = int(input("批量填报人数(留空默认“1”): ") or "1")
+        count = int(input("批量填报人数(留空默认\"1\"): ") or "1")
         print("---全局设置---\n"
               "填写后会成为默认值，方便后续每位同学的填写")
-        province = input("填报省份(留空默认”湖北省“): ") or "湖北省"
-        city = input("填报城市(留空默认”武汉市“): ") or "武汉市"
-        county = input("填报区县(留空默认”武昌区“): ") or "武昌区"
-        street = input("填报街道(留空默认”友谊大道“): ") or "友谊大道"
+        province = input("填报省份(留空默认\"湖北省\"): ") or "湖北省"
+        city = input("填报城市(留空默认\"武汉市\"): ") or "武汉市"
+        county = input("填报区县(留空默认\"武昌区\"): ") or "武昌区"
+        street = input("填报街道(留空默认\"友谊大道\"): ") or "友谊大道"
         for i in range(1, count + 1):
             print(f"---学生{i}---")
             conf_student.append(student_dict(province, city, county, street))
@@ -113,7 +113,7 @@ def init_config():
     if enable_cqhttp == "Y" or enable_cqhttp == "y":
         conf_notification["cqhttp"]["enable"] = True
         conf_notification["cqhttp"]["api"] = input(
-            "cqhttp http API 地址(留空默认“http://127.0.0.1:5700/send_msg”): ") or "http://127.0.0.1:5700/send_msg"
+            "cqhttp http API 地址(留空默认\"http://127.0.0.1:5700/send_msg\"): ") or "http://127.0.0.1:5700/send_msg"
         conf_notification["cqhttp"]["uid"] = input("收信QQ号，不填则不发送: ")
         conf_notification["cqhttp"]["gid"] = input("收信群号，不填则不发送: ")
     print("======设置完成======")
