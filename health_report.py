@@ -82,7 +82,8 @@ def bind_user_info(account: str, password: str, is_graduate: bool) -> bool:
 # 健康填报
 # https://zhxg.whut.edu.cn/yqtjwx/./monitorRegister
 # https://yjsxx.whut.edu.cn/wx/./monitorRegister
-def monitor_register(is_graduate: bool, province: str, city: str, county: str, street: str, temperature: str) -> bool:
+def monitor_register(is_graduate: bool, province: str, city: str, county: str, street: str,
+                     is_inschool: bool, is_leavecity: bool, temperature: str) -> bool:
     global error_log
     log.info("[3] 正在填报操作")
     address = province + city + county + street
@@ -98,8 +99,8 @@ def monitor_register(is_graduate: bool, province: str, city: str, county: str, s
         "healthInfo": "正常",
         "isDiagnosis": "0",
         "isFever": "0",
-        "isInSchool": "1",
-        "isLeaveChengdu": "0",
+        "isInSchool": str(int(is_inschool)),
+        "isLeaveChengdu": str(int(is_leavecity)),
         "isSymptom": "0",
         "temperature": temperature,
         "province": province,
@@ -122,6 +123,7 @@ def monitor_register(is_graduate: bool, province: str, city: str, county: str, s
 
 # 解绑：若不解绑，下次将无法绑定
 # https://zhxg.whut.edu.cn/yqtjwx/api/login/cancelBind
+# "https://zhxg.whut.edu.cn/yqtjwx/api/login/cancelBind"
 def cancel_bind(is_graduate: bool) -> bool:
     global error_log
     log.info("[4] 正在解绑身份")
@@ -156,7 +158,8 @@ def base64_str_to_dict(data: str) -> dict:
 
 
 def report(account: str, password: str, is_graduate: bool,
-           province: str, city: str, county: str, street: str, temperature: str):
+           province: str, city: str, county: str, street: str,
+           is_inschool: bool, is_leacecity: bool, temperature: str):
     global error_log
     log.info("=======健康填报=======")
     log.info(f"学生: {account}")
@@ -166,7 +169,7 @@ def report(account: str, password: str, is_graduate: bool,
     try:
         if not (check_bind(is_graduate) and
                 bind_user_info(account, password, is_graduate) and
-                monitor_register(is_graduate, province, city, county, street, temperature)):
+                monitor_register(is_graduate, province, city, county, street, is_inschool, is_leacecity, temperature)):
             status = False
     finally:
         status &= cancel_bind(is_graduate)

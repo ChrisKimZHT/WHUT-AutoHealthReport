@@ -58,6 +58,16 @@ def student_dict(global_province: str = "湖北省", global_city: str = "武汉�
     city = input(f"填报城市(留空默认\"{global_city}\"): ") or global_city
     county = input(f"填报区县(留空默认\"{global_county}\"): ") or global_county
     street = input(f"填报街道(留空默认\"{global_street}\"): ") or global_street
+    is_inschool = input("是否在校(Y/N，留空默认是): ")
+    if is_inschool == "N" or is_inschool == "n":
+        is_inschool = False
+    else:
+        is_inschool = True
+    is_leacecity = input("是否离汉(Y/N，留空默认否): ")
+    if is_leacecity == "Y" or is_leacecity == "y":
+        is_leacecity = True
+    else:
+        is_leacecity = False
     temperature = input("填报温度，若要修改请与微信小程序一致(留空默认\"36.5°C~36.9°C\"): ") or "36.5°C~36.9°C"
     return {
         "account": account,
@@ -67,6 +77,8 @@ def student_dict(global_province: str = "湖北省", global_city: str = "武汉�
         "city": city,
         "county": county,
         "street": street,
+        "is_inschool": is_inschool,
+        "is_leacecity": is_leacecity,
         "temperature": temperature,
     }
 
