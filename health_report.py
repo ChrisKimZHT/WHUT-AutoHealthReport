@@ -159,7 +159,7 @@ def base64_str_to_dict(data: str) -> dict:
 
 def report(account: str, password: str, is_graduate: bool,
            province: str, city: str, county: str, street: str,
-           is_inschool: bool, is_leacecity: bool, temperature: str):
+           is_inschool: bool, is_leacecity: bool, temperature: str) -> tuple:
     global error_log
     log.info("=======健康填报=======")
     log.info(f"学生: {account}")
@@ -175,7 +175,13 @@ def report(account: str, password: str, is_graduate: bool,
         status &= cancel_bind(is_graduate)
     if status:
         log.info(f"学生{account}填报成功")
-        return f"学生 {account} 填报成功！"
+        return True, f"学生 {account} 填报成功！"
     else:
         log.error(f"学生{account}填报失败")
-        return f"学生 {account} 填报失败！\n" + error_log
+        return False, f"学生 {account} 填报失败！\n" + error_log
+
+
+def report_by_dict(user: dict) -> tuple:  # 一层套娃而已
+    return report(user["account"], user["password"], user["is_graduate"],
+                  user["province"], user["city"], user["county"], user["street"],
+                  user["is_inschool"], user["is_leacecity"], user["temperature"])
