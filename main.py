@@ -1,14 +1,18 @@
-import time
+from logger import log
 from config import conf_student
 from health_report import report_by_dict
 from notification import msg
+import time
 
 if __name__ == "__main__":
-    message = "【健康填报】v1.2.0\n"
+    log.info("======程序启动=======")
+    message = "【健康填报】v1.2.1\n"
     for user in conf_student:
         text = ""
-        for _ in range(1, 4):  # 重试三次
+        log.info(f"==={user['account']}===")
+        for retry in range(1, 4):  # 重试三次
             time.sleep(3)
+            log.info(f"---第{retry}次尝试---")
             status, text = report_by_dict(user)
             if status:
                 message += text + "\n"
@@ -16,4 +20,6 @@ if __name__ == "__main__":
         else:  # 若三次都失败
             message += text + "\n"
     message += "GitHub@ChrisKimZHT"
+    log.info("=======消息推送=======")
+    log.debug("待推送消息:\n" + message)
     msg(message)

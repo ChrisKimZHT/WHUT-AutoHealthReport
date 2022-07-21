@@ -27,7 +27,6 @@ gid = conf_notification["cqhttp"]["gid"]  # 收信群号，不填则不发送
 
 
 def msg(text):
-    log.info("=======消息推送=======")
     if cqhttp:
         try:
             send_cqhttp(text)

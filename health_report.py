@@ -161,8 +161,7 @@ def report(account: str, password: str, is_graduate: bool,
            province: str, city: str, county: str, street: str,
            is_inschool: bool, is_leacecity: bool, temperature: str) -> tuple:
     global error_log
-    log.info("=======健康填报=======")
-    log.info(f"学生: {account}")
+    log.debug(f"开始填报: {account}")
     status = True  # 填报状态
     headers["Cookie"] = ""  # 重置headers
     error_log = ""  # 重置错误日志
