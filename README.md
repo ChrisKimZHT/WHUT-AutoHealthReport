@@ -8,7 +8,7 @@
 
 ### 效果预览
 
-![Preview](https://assets.zouht.com/img/md/WHUT-AutoHealthReport-README-01.png?)
+![Preview](https://assets.zouht.com/img/md/WHUT-AutoHealthReport-README-01.png)
 
 ### 使用方法
 
