@@ -21,7 +21,7 @@
 **从源码运行**
 
 1. 确保系统有 `Python3` 环境。
-2. 安装模块：`requests`、`PyYAML`
+2. 安装模块：`pip install -r requirements.txt`
 3. 首次运行 `main.py`，根据程序提示填写信息。**请注意地址和在校情况的填写，尤其是假期。**
 4. 定时运行 `main.py` 即可自动填报（Linux 可用 `Crontab` 定时执行）
 
