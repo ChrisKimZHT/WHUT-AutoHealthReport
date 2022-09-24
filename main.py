@@ -6,7 +6,7 @@ import time
 
 if __name__ == "__main__":
     log.info("======程序启动=======")
-    message = "【健康填报】v1.2.1\n"
+    message = "【健康填报】v1.2.2\n"
     for user in conf_student:
         text = ""
         log.info(f"==={user['account']}===")
