@@ -1,0 +1,212 @@
+import logging
+import json
+import base64
+import random
+import requests
+
+reported=False	//全局变量，防止重复报送
+
+log = logging.getLogger("log.txt")
+log.setLevel(logging.DEBUG)
+shandler = logging.StreamHandler()
+shandler.setFormatter(logging.Formatter("[%(levelname)s] %(message)s"))
+shandler.setLevel(logging.INFO)
+fhandler = logging.FileHandler(filename="log.txt", mode="w", encoding="utf-8")
+fhandler.setFormatter(logging.Formatter("<%(asctime)s> [%(levelname)s] %(message)s"))
+fhandler.setLevel(logging.DEBUG)
+log.addHandler(shandler)
+log.addHandler(fhandler)
+
+conf_notification = {
+    "cqhttp": {
+        "enable": True,
+        "api": "http://youripaddress:5700/send_group_msg",
+        "uid": "",
+        "gid": "xxxxxxx",
+    }
+}
+
+ua_list = [
+    "Mozilla/5.0 (Linux; U; Android 7.1.2; zh-cn; MI 6 Build/NXTHUAWEI) AppleWebKit/537.36 (KHTML, like Gecko)Version/4.0 MQQBrowser/9.9 Mobile Safari/537.36",
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 9_3_5 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Mobile/13G36 baiduboxapp/0_01.5.2.8_enohpi_6311_046/5.3.9_1C2%8enohPi/1099a/7D4BD508A31C4692ACC31489A6AA6FAA3D5694CC7OCARCEMSHG/1",
+    "Mozilla/5.0 (Linux; U; Android 4.4.4; en-us; vivo X5Max Build/KTU84P) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 UCBrowser/1.0.0.100 U3/0.8.0 Mobile Safari/534.30 AliApp(TB/6.5.0) WindVane/8.0.0 1080X1920 GCanvas/1.4.2.21",
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 10_2 like Mac OS X) AppleWebKit/602.3.12 (KHTML, like Gecko) Mobile/14C92 baiduboxapp/0_01.5.2.8_enohpi_8022_2421/2.01_2C2%8enohPi/1099a/05D5623EBB692D46C9C9659B23D68FBD5C7FEB228ORMNJBQOHM/1",
+    "Mozilla/5.0 (Linux; Android 8.0.0; BKL-AL00 Build/HUAWEIBKL-AL00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/76.0.3809.89 Mobile Safari/537.36 T7/11.19 SP-engine/2.15.0 baiduboxapp/11.19.5.10 (Baidu; P1 8.0.0)"
+]
+
+headers = {
+    "Host": "zhxg.whut.edu.cn",
+    "Connection": "keep-alive",
+    # "Content-Length": "",
+    # "User-Agent": "",
+    "X-Tag": "flyio",
+    "content-type": "application/json",
+    "encode": "true",
+    "Referer": "https://servicewechat.com/wxa0738e54aae84423/21/page-frame.html",
+    "Accept-Encoding": "gzip, deflate, br"
+}
+
+error_log = ""
+
+def check_bind(is_graduate: bool) -> bool:
+    global error_log
+    log.info("[1] 正在创建会话")
+    # 设置header
+	url = "https://zhxg.whut.edu.cn/yqtjwx/api/login/checkBind"
+    headers["User-Agent"] = random.choice(ua_list)
+    log.debug(f"设置header完成: {headers}")
+    data = dict_to_base64_bin({"sn": None, "idCard": None})
+    respounce = requests.post(url=url, headers=headers, data=data).json()
+    log.debug(f"请求发送完成，收到响应: {respounce}")
+    if respounce["status"]:
+        resp_data = base64_str_to_dict(respounce["data"])
+        log.debug(f"响应data解码: {resp_data}")
+        headers["Cookie"] = f"JSESSIONID={resp_data['sessionId']}"  # 写入Cookie
+        return True
+    else:
+        error_log += str(respounce)
+        log.error("[X] 创建会话出现错误，详情见log.txt")
+        return False
+
+def bind_user_info(account: str, password: str, is_graduate: bool) -> bool:
+    global error_log
+    log.info("[2] 正在绑定身份")
+	url = "https://zhxg.whut.edu.cn/yqtjwx/api/login/bindUserInfo"
+    data = dict_to_base64_bin({"sn": account, "idCard": password})
+    respounce = requests.post(url=url, headers=headers, data=data).json()
+    log.debug(f"请求发送完成，收到响应: {respounce}")
+    if respounce["status"]:
+        resp_data = base64_str_to_dict(respounce["data"])
+        log.debug(f"响应data解码: {resp_data}")
+        return True
+    else:
+        error_log += str(respounce)
+        log.error("[X] 绑定身份出现错误，详情见log.txt")
+        return False
+
+    
+def monitor_register(is_graduate: bool, province: str, city: str, county: str, street: str,is_inschool: bool, is_leavecity: bool, temperature: str) -> bool:
+    global error_log
+    log.info("[3] 正在填报操作")
+    address = province + city + county + street
+	url = "https://zhxg.whut.edu.cn/yqtjwx/./monitorRegister"
+    dict_data = {
+        "diagnosisName": "",
+        "relationWithOwn": "",
+        "currentAddress": address,
+        "remark": "无",
+        "healthInfo": "正常",
+        "isDiagnosis": "0",
+        "isFever": "0",
+        "isInSchool": str(int(is_inschool)),
+        "isLeaveChengdu": str(int(is_leavecity)),
+        "isSymptom": "0",
+        "temperature": temperature,
+        "province": province,
+        "city": city,
+        "county": county
+    }
+    log.debug(f"填报数据生成完成: {dict_data}")
+    data = dict_to_base64_bin(dict_data)
+    respounce = requests.post(url=url, headers=headers, data=data).json()
+    log.debug(f"请求发送完成，收到响应: {respounce}")
+    if respounce["status"]:
+        resp_data = base64_str_to_dict(respounce["data"])
+        log.debug(f"响应data解码: {resp_data}")
+        return True
+    else:
+        if respounce["message"] == '今日已填报':
+            global reported
+            reported= True
+            return True
+        else:
+            error_log += str(respounce)
+            log.error("[X] 填报操作出现错误，详情见log.txt")
+            return False
+
+
+def cancel_bind(is_graduate: bool) -> bool:
+    global error_log
+    log.info("[4] 正在解绑身份")
+	url = "https://zhxg.whut.edu.cn/yqtjwx/api/login/cancelBind"
+    respounce = requests.post(url=url, headers=headers).json()
+    log.debug(f"请求发送完成，收到响应: {respounce}")
+    if respounce["status"]:
+        resp_data = base64_str_to_dict(respounce["data"])
+        log.debug(f"响应data解码: {resp_data}")
+        return True
+    else:
+        error_log += str(respounce)
+        log.error("[X] 解绑身份出现错误，详情见log.txt")
+        return False
+
+def dict_to_base64_bin(data: dict) -> bin:
+    string = json.dumps(data)
+    binary = string.encode()
+    base64_binary = base64.b64encode(binary)
+    return base64_binary
+
+def base64_str_to_dict(data: str) -> dict:
+    string_binary = base64.b64decode(data)
+    string = string_binary.decode()
+    dictionary = json.loads(string)
+    return dictionary
+
+def report(account: str, password: str, is_graduate: bool,
+           province: str, city: str, county: str, street: str,
+           is_inschool: bool, is_leacecity: bool, temperature: str) -> tuple:
+    global error_log
+    log.debug(f"开始填报: {account}")
+    status = True  # 填报状态
+    headers["Cookie"] = ""  # 重置headers
+    error_log = ""  # 重置错误日志
+    try:
+        if not (check_bind(is_graduate) and
+                bind_user_info(account, password, is_graduate) and
+                monitor_register(is_graduate, province, city, county, street, is_inschool, is_leacecity, temperature)):
+            status = False
+    finally:
+        status &= cancel_bind(is_graduate)
+    if status:
+        if reported:
+            log.info("------今日已填报，别操心了------")
+            return True, f" {account} 今日已填报！"
+        else:
+            log.info(f"{account}填报成功")
+            return True, f" {account} 填报成功！"
+    else:
+        log.error(f"{account}填报失败")
+        return False, f" {account} 填报失败！\n" + error_log
+
+
+def report_by_dict(user: dict) -> tuple:
+    return report(user["account"], user["password"], user["is_graduate"],
+                  user["province"], user["city"], user["county"], user["street"],
+                  user["is_inschool"], user["is_leacecity"], user["temperature"])
+
+api = conf_notification["cqhttp"]["api"]  # cqhttp http API 地址
+uid = conf_notification["cqhttp"]["uid"]  # 收信QQ号，不填则不发送
+gid = conf_notification["cqhttp"]["gid"]  # 收信群号，不填则不发送
+
+
+def msg(text):
+    try:
+        send_cqhttp(text)
+        log.info("成功发送cqhttp消息")
+    except:
+        log.error("发送cqhttp消息失败")
+
+
+def send_cqhttp(text):
+    data_user = {
+        "user_id": uid,
+        "message": text
+    }
+    data_group = {
+        "group_id": gid,
+        "message": text
+    }
+    if data_user["user_id"] != "":
+        requests.get(api, params=data_user)
+    if data_group["group_id"] != "":
+        requests.get('http://127.0.0.1:5700/send_group_msg', params=data_group)
