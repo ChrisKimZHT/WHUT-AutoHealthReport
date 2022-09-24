@@ -71,12 +71,12 @@ def bind_user_info(account: str, password: str, is_graduate: bool) -> bool:
     log.debug(f"请求发送完成，收到响应: {respounce}")
     if respounce["status"]:
         resp_data = base64_str_to_dict(respounce["data"])
-        log.debug(f"响应data解码: {resp_data}")
-        return True
-    else:
-        error_log += str(respounce)
-        log.error("[X] 绑定身份出现错误，详情见log.txt")
-        return False
+        if resp_data["user"]["sn"] == account:
+            log.debug(f"响应data解码: {resp_data}")
+            return True
+    error_log += str(respounce)
+    log.error("[X] 绑定身份出现错误，详情见log.txt")
+    return False
 
 
 # 健康填报
