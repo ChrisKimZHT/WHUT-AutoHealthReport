@@ -4,8 +4,6 @@ import base64
 import random
 from logger import log
 
-reported=False	#设置全局变量，防止重复报送
-
 # User-Agent列表 分别是Android微信、iOS微信、PC微信
 ua_list = [
     "Mozilla/5.0 (Linux; Android 11; POCO F2 Pro Build/RKQ1.200826.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/74.0.3729.136 Mobile Safari/537.36 MMWEBID/1230 MicroMessenger/8.0.17.2040(0x28001133) Process/toolsmp WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64",
@@ -29,10 +27,10 @@ headers = {
 error_log = ""
 
 
-# 获取SessionID
+# 获取SessionID 返回:0-失败,1-成功
 # https://zhxg.whut.edu.cn/yqtjwx/api/login/checkBind
 # https://yjsxx.whut.edu.cn/wx/api/login/checkBind
-def check_bind(is_graduate: bool) -> bool:
+def check_bind(is_graduate: bool) -> int:
     global error_log
     log.info("[1] 正在创建会话")
     # 设置header
@@ -51,17 +49,17 @@ def check_bind(is_graduate: bool) -> bool:
         resp_data = base64_str_to_dict(respounce["data"])
         log.debug(f"响应data解码: {resp_data}")
         headers["Cookie"] = f"JSESSIONID={resp_data['sessionId']}"  # 写入Cookie
-        return True
+        return 1
     else:
         error_log += str(respounce)
         log.error("[X] 创建会话出现错误，详情见log.txt")
-        return False
+        return 0
 
 
-# 绑定身份
+# 绑定身份 返回:0-失败,1-成功
 # https://zhxg.whut.edu.cn/yqtjwx/api/login/bindUserInfo
 # https://yjsxx.whut.edu.cn/wx/api/login/bindUserInfo
-def bind_user_info(account: str, password: str, is_graduate: bool) -> bool:
+def bind_user_info(account: str, password: str, is_graduate: bool) -> int:
     global error_log
     log.info("[2] 正在绑定身份")
     if is_graduate:
@@ -75,17 +73,17 @@ def bind_user_info(account: str, password: str, is_graduate: bool) -> bool:
         resp_data = base64_str_to_dict(respounce["data"])
         if resp_data["user"]["sn"] == account:
             log.debug(f"响应data解码: {resp_data}")
-            return True
+            return 1
     error_log += str(respounce)
     log.error("[X] 绑定身份出现错误，详情见log.txt")
-    return False
+    return 0
 
 
-# 健康填报
+# 健康填报 返回:0-失败,1-成功,2-已填报
 # https://zhxg.whut.edu.cn/yqtjwx/./monitorRegister
 # https://yjsxx.whut.edu.cn/wx/./monitorRegister
 def monitor_register(is_graduate: bool, province: str, city: str, county: str, street: str,
-                     is_inschool: bool, is_leavecity: bool, temperature: str) -> bool:
+                     is_inschool: bool, is_leavecity: bool, temperature: str) -> int:
     global error_log
     log.info("[3] 正在填报操作")
     address = province + city + county + street
@@ -116,22 +114,20 @@ def monitor_register(is_graduate: bool, province: str, city: str, county: str, s
     if respounce["status"]:
         resp_data = base64_str_to_dict(respounce["data"])
         log.debug(f"响应data解码: {resp_data}")
-        return True
+        return 1
+    elif respounce["message"] == "今日已填报":
+        log.debug("该账号已填报")
+        return 2
     else:
-        if respounce["message"] == '今日已填报':
-            global reported
-            reported= True
-            return True
-        else:
-            error_log += str(respounce)
-            log.error("[X] 填报操作出现错误，详情见log.txt")
-            return False
+        error_log += str(respounce)
+        log.error("[X] 填报操作出现错误，详情见log.txt")
+        return 0
 
 
-# 解绑：若不解绑，下次将无法绑定
+# 解绑：若不解绑，下次将无法绑定 返回:0-失败,1-成功
 # https://zhxg.whut.edu.cn/yqtjwx/api/login/cancelBind
 # "https://zhxg.whut.edu.cn/yqtjwx/api/login/cancelBind"
-def cancel_bind(is_graduate: bool) -> bool:
+def cancel_bind(is_graduate: bool) -> int:
     global error_log
     log.info("[4] 正在解绑身份")
     if is_graduate:
@@ -143,11 +139,11 @@ def cancel_bind(is_graduate: bool) -> bool:
     if respounce["status"]:
         resp_data = base64_str_to_dict(respounce["data"])
         log.debug(f"响应data解码: {resp_data}")
-        return True
+        return 1
     else:
         error_log += str(respounce)
         log.error("[X] 解绑身份出现错误，详情见log.txt")
-        return False
+        return 0
 
 
 def dict_to_base64_bin(data: dict) -> bin:
@@ -167,29 +163,31 @@ def base64_str_to_dict(data: str) -> dict:
 def report(account: str, password: str, is_graduate: bool,
            province: str, city: str, county: str, street: str,
            is_inschool: bool, is_leacecity: bool, temperature: str) -> tuple:
-    global error_log,reported
+    global error_log
     log.debug(f"开始填报: {account}")
-    status = True  # 填报状态
+    status = 1  # 填报状态
     headers["Cookie"] = ""  # 重置headers
     error_log = ""  # 重置错误日志
-    reported = False  # 重置已报送标记变量
     try:
-        if not (check_bind(is_graduate) and
-                bind_user_info(account, password, is_graduate) and
-                monitor_register(is_graduate, province, city, county, street, is_inschool, is_leacecity, temperature)):
-            status = False
+        if status:
+            status = check_bind(is_graduate)  # 获取SessionID
+        if status:
+            status = bind_user_info(account, password, is_graduate)  # 绑定身份
+        if status:
+            status = monitor_register(is_graduate, province, city, county, street,
+                                      is_inschool, is_leacecity, temperature)  # 健康填报
     finally:
-            status &= cancel_bind(is_graduate)
-    if status:
-        if reported:
-            log.info("------今日已填报，别操心啦------")
-            return True, f" {account} 今日已填报！"
-        else:
-            log.info(f"{account}填报成功")
-            return True, f" {account} 填报成功！"
+        if not cancel_bind(is_graduate):
+            status = 0
+    if status == 1:
+        log.info(f"{account}填报成功")
+        return True, f"学生 {account} 填报成功！"
+    elif status == 2:
+        log.warn(f"{account}今日已填报")
+        return True, f"学生 {account} 今日已填报！"
     else:
         log.error(f"{account}填报失败")
-        return False, f" {account} 填报失败！\n" + error_log
+        return False, f"学生 {account} 填报失败！\n" + error_log
 
 
 def report_by_dict(user: dict) -> tuple:  # 一层套娃而已
