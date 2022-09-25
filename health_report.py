@@ -4,6 +4,8 @@ import base64
 import random
 from logger import log
 
+reported=False	#设置全局变量，防止重复报送
+
 # User-Agent列表 分别是Android微信、iOS微信、PC微信
 ua_list = [
     "Mozilla/5.0 (Linux; Android 11; POCO F2 Pro Build/RKQ1.200826.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/74.0.3729.136 Mobile Safari/537.36 MMWEBID/1230 MicroMessenger/8.0.17.2040(0x28001133) Process/toolsmp WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64",
@@ -116,9 +118,14 @@ def monitor_register(is_graduate: bool, province: str, city: str, county: str, s
         log.debug(f"响应data解码: {resp_data}")
         return True
     else:
-        error_log += str(respounce)
-        log.error("[X] 填报操作出现错误，详情见log.txt")
-        return False
+        if respounce["message"] == '今日已填报':
+            global reported
+            reported= True
+            return True
+        else:
+            error_log += str(respounce)
+            log.error("[X] 填报操作出现错误，详情见log.txt")
+            return False
 
 
 # 解绑：若不解绑，下次将无法绑定
@@ -171,13 +178,17 @@ def report(account: str, password: str, is_graduate: bool,
                 monitor_register(is_graduate, province, city, county, street, is_inschool, is_leacecity, temperature)):
             status = False
     finally:
-        status &= cancel_bind(is_graduate)
+            status &= cancel_bind(is_graduate)
     if status:
-        log.info(f"学生{account}填报成功")
-        return True, f"学生 {account} 填报成功！"
+        if reported:
+            log.info("------今日已填报，别操心啦------")
+            return True, f" {account} 今日已填报！"
+        else:
+            log.info(f"{account}填报成功")
+            return True, f" {account} 填报成功！"
     else:
-        log.error(f"学生{account}填报失败")
-        return False, f"学生 {account} 填报失败！\n" + error_log
+        log.error(f"{account}填报失败")
+        return False, f" {account} 填报失败！\n" + error_log
 
 
 def report_by_dict(user: dict) -> tuple:  # 一层套娃而已

@@ -6,7 +6,7 @@ import time
 
 if __name__ == "__main__":
     log.info("======程序启动=======")
-    message = "【健康填报】v1.2.2\n"
+    message = "【健康填报】[自动反馈]\n"
     for user in conf_student:
         text = ""
         log.info(f"==={user['account']}===")
@@ -19,7 +19,7 @@ if __name__ == "__main__":
                 break
         else:  # 若三次都失败
             message += text + "\n"
-    message += "GitHub@ChrisKimZHT"
+    message += "GitHub@kmoonn"
     log.info("=======消息推送=======")
     log.debug("待推送消息:\n" + message)
     msg(message)
