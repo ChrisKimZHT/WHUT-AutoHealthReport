@@ -167,11 +167,12 @@ def base64_str_to_dict(data: str) -> dict:
 def report(account: str, password: str, is_graduate: bool,
            province: str, city: str, county: str, street: str,
            is_inschool: bool, is_leacecity: bool, temperature: str) -> tuple:
-    global error_log
+    global error_log,reported
     log.debug(f"开始填报: {account}")
     status = True  # 填报状态
     headers["Cookie"] = ""  # 重置headers
     error_log = ""  # 重置错误日志
+    reported = False  # 重置已报送标记变量
     try:
         if not (check_bind(is_graduate) and
                 bind_user_info(account, password, is_graduate) and
